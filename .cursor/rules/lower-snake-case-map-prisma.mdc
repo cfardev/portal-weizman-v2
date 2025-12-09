@@ -1,0 +1,8 @@
+---
+globs: *.prisma
+alwaysApply: false
+---
+## Prisma Schema Naming
+- Always use lower snake_case for all `@map` attributes in `prisma/schema.prisma`
+- Example: `@map("created_at")`, `@map("user_profiles")`, `@@map("user_sessions")`
+
