@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+- Lower kebab-case for every file you gonna create for example `example-form.tsx`.
+- For the text in the app remember use `/locales` and multilanguaje suport
+- For form and components

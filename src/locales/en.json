@@ -4,6 +4,19 @@
     "login": "Login",
     "logout": "Logout",
     "dashboard": "Dashboard"
+  },
+  "login": {
+    "title": "Welcome to Weizman Portal",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "loading": "Loading...",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "errorOccurred": "An error occurred",
+    "unexpectedError": "An unexpected error occurred"
   }
 }
 

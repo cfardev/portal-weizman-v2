@@ -30,17 +30,18 @@ model User {
   occupation        String?   @db.Text
   postalBox         String?   @map("postal_box") @db.Text
   enabled           Boolean?  @default(true)
+  role              Role?
   guardianRole      String?   @map("guardian_role") @db.Text
   sessions          Session[]
   accounts          Account[]
   family            Family?   @relation(fields: [familyId], references: [id])
-  userRoles         UserRole[]
   enrollments       Enrollment[]
   studentGuardians  StudentGuardian[]
   studentAuditLogs  StudentAuditLog[]
   automaticCharges  AutomaticCharge[]
 
   @@index([familyId(length: 191)])
+  @@index([role])
   @@map("users")
 }
 
@@ -540,19 +541,6 @@ enum Role {
   Comunicaciones
   Biblioteca
   CoordinacionBienestarEscolar
-}
-
-model UserRole {
-  userId    String   @map("user_id")
-  role      Role
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([userId, role])
-  @@index([userId(length: 191)])
-  @@index([role])
-  @@map("user_roles")
 }
 
 model Permission {

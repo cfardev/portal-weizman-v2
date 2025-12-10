@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { Locale, defaultLocale } from "@/lib/i18n";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -25,8 +26,10 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${montserrat.variable} antialiased`}>
-        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+      <body className={`${montserrat.variable} antialiased bg-slate-100`}>
+        <QueryProvider>
+          <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+        </QueryProvider>
       </body>
     </html>
   );
