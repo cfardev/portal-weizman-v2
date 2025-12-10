@@ -10,7 +10,8 @@
     "test": "vitest run",
     "prisma:push": "prisma db push",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.1.0",
@@ -39,6 +40,7 @@
     "jsdom": "^27.3.0",
     "prisma": "^7.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.15"
   }

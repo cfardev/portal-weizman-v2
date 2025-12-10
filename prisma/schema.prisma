@@ -519,31 +519,39 @@ model Relationship {
 }
 
 // Role and Permission Models (acceso)
-model Role {
-  id          String    @id @default(uuid())
-  name        String    @db.VarChar(255)
-  description String?   @db.Text
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  
-  userRoles   UserRole[]
-  permissions RolePermission[]
-
-  @@unique([name(length: 191)])
-  @@map("roles")
+enum Role {
+  SuperAdministrador
+  CoordinadoraGAN
+  CoordinadoraPEP
+  CoordinadoraPAI
+  CoordinadoraDP
+  DirectoraGeneral
+  DirectorFinanciero
+  AsistenteDireccion
+  Cajas
+  Contabilidad
+  Proveeduria
+  Enfermeria
+  Informatica
+  Comedor
+  Encargado
+  Polpo
+  Recepcion
+  Comunicaciones
+  Biblioteca
+  CoordinacionBienestarEscolar
 }
 
 model UserRole {
-  userId    String  @map("user_id")
-  roleId    String  @map("role_id")
+  userId    String   @map("user_id")
+  role      Role
   createdAt DateTime @default(now()) @map("created_at")
   
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@id([userId, roleId])
+  @@id([userId, role])
   @@index([userId(length: 191)])
-  @@index([roleId(length: 191)])
+  @@index([role])
   @@map("user_roles")
 }
 
@@ -560,15 +568,14 @@ model Permission {
 }
 
 model RolePermission {
-  roleId       String  @map("role_id")
-  permissionId String  @map("permission_id")
+  role         Role
+  permissionId String   @map("permission_id")
   createdAt    DateTime @default(now()) @map("created_at")
   
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  @@id([roleId, permissionId])
-  @@index([roleId(length: 191)])
+  @@id([role, permissionId])
+  @@index([role])
   @@index([permissionId(length: 191)])
   @@map("role_permissions")
 }
