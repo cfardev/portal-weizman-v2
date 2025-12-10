@@ -38,6 +38,7 @@ model User {
   enrollments       Enrollment[]
   studentGuardians  StudentGuardian[]
   studentAuditLogs  StudentAuditLog[]
+  automaticCharges  AutomaticCharge[]
 
   @@index([familyId(length: 191)])
   @@map("users")
@@ -345,6 +346,7 @@ model AutomaticCharge {
   updatedAt           DateTime  @updatedAt @map("updated_at")
   
   family              Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user                User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   students            AutomaticChargeStudent[]
 
   @@index([familyId(length: 191)])
