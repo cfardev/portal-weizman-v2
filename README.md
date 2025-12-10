@@ -8,7 +8,7 @@ Portal web moderno construido con Next.js 16, diseñado para gestionar el acceso
 - **Lenguaje**: TypeScript
 - **Base de Datos**: MySQL/MariaDB con [Prisma](https://www.prisma.io/)
 - **Autenticación**: [Better Auth](https://www.better-auth.com/)
-- **Internacionalización**: [next-intl](https://next-intl-docs.vercel.app/)
+- **Internacionalización**: Sistema personalizado con cookies y contexto React
 - **Estilos**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **Componentes UI**: [shadcn/ui](https://ui.shadcn.com/)
 - **Linter**: [Biome](https://biomejs.dev/)
@@ -87,7 +87,6 @@ portal-weizman-v2/
 ├── src/
 │   ├── app/              # Rutas y páginas (App Router)
 │   │   ├── api/         # API routes
-│   │   └── [locale]/    # Rutas internacionalizadas
 │   ├── components/      # Componentes React
 │   │   └── ui/          # Componentes shadcn/ui
 │   ├── contexts/        # Contextos de React

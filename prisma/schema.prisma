@@ -8,64 +8,565 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  name          String    @db.Text
-  emailVerified Boolean   @default(false)
-  image         String?   @db.Text
-  sessions      Session[]
-  accounts      Account[]
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String?   // Optional for OAuth users
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  name              String?   @db.Text // Optional as per Better Auth
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  image             String?   @db.Text
+  familyId          String?   @map("family_id")
+  firstName         String?   @map("first_name") @db.Text
+  lastName1         String?   @map("last_name_1") @db.Text
+  lastName2         String?   @map("last_name_2") @db.Text
+  mustChangePassword Boolean  @default(true) @map("must_change_password")
+  language          String    @default("es") @db.VarChar(5)
+  civilStatus       String?   @map("civil_status") @db.Text
+  address           String?   @db.Text
+  phone             String?   @db.Text
+  idNumber          String?   @map("id_number") @db.VarChar(100)
+  nationality       String?   @db.Text
+  occupation        String?   @db.Text
+  postalBox         String?   @map("postal_box") @db.Text
+  enabled           Boolean?  @default(true)
+  guardianRole      String?   @map("guardian_role") @db.Text
+  sessions          Session[]
+  accounts          Account[]
+  family            Family?   @relation(fields: [familyId], references: [id])
+  userRoles         UserRole[]
+  enrollments       Enrollment[]
+  studentGuardians  StudentGuardian[]
+  studentAuditLogs  StudentAuditLog[]
 
+  @@index([familyId(length: 191)])
   @@map("users")
 }
 
 model Session {
   id        String   @id
-  expiresAt DateTime
+  expiresAt DateTime @map("expires_at")
   token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?  @db.Text
-  userAgent String?  @db.Text
-  userId    String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address") @db.Text
+  userAgent String?  @map("user_agent") @db.Text
+  userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@index([userId(length: 191)])
-  @@map("session")
+  @@map("sessions")
 }
 
 model Account {
   id                    String    @id
-  accountId             String    @db.Text
-  providerId            String    @db.Text
-  userId                String
+  accountId             String    @map("account_id") @db.Text
+  providerId            String    @map("provider_id") @db.Text
+  userId                String    @map("user_id")
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?   @db.Text
-  refreshToken          String?   @db.Text
-  idToken               String?   @db.Text
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
+  accessToken           String?   @map("access_token") @db.Text
+  refreshToken          String?   @map("refresh_token") @db.Text
+  idToken               String?   @map("id_token") @db.Text
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
   scope                 String?   @db.Text
   password              String?   @db.Text
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   @@index([userId(length: 191)])
-  @@map("account")
+  @@map("accounts")
 }
 
 model Verification {
   id         String   @id
   identifier String   @db.Text
   value      String   @db.Text
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([identifier(length: 191)])
   @@map("verification")
+}
+
+// Family (nucleo)
+model Family {
+  id              String    @id @default(uuid())
+  isCiscrMember   Boolean   @default(false) @map("is_ciscr_member")
+  isCiscrUpToDate Boolean   @default(false) @map("is_ciscr_up_to_date")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  users           User[]
+  students        Student[]
+  addresses       Address[]
+  phoneNumbers    PhoneNumber[]
+  doctors         FamilyDoctor[]
+  automaticCharges AutomaticCharge[]
+  enrollments     Enrollment[]
+
+  @@map("families")
+}
+
+// Address (nucleoDireccion)
+model Address {
+  id          String   @id @default(uuid())
+  familyId    String   @map("family_id")
+  addressType String?  @map("address_type") @db.Text
+  province    String?  @db.Text
+  canton      String?  @db.Text
+  district    String?  @db.Text
+  details     String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId(length: 191)])
+  @@map("addresses")
+}
+
+// PhoneNumber (nucleoTelefono)
+model PhoneNumber {
+  id        String   @id @default(uuid())
+  familyId  String   @map("family_id")
+  phoneType String?  @map("phone_type") @db.Text
+  phone     String?  @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId(length: 191)])
+  @@map("phone_numbers")
+}
+
+// FamilyDoctor (nucleoMedico)
+model FamilyDoctor {
+  id            String   @id @default(uuid())
+  familyId      String   @map("family_id")
+  doctorName    String?  @map("doctor_name") @db.Text
+  officePhone   String?  @map("office_phone") @db.VarChar(50)
+  mobilePhone   String?  @map("mobile_phone") @db.VarChar(50)
+  otherPhone    String?  @map("other_phone") @db.VarChar(50)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  family        Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId(length: 191)])
+  @@map("family_doctors")
+}
+
+// Student (alumno)
+model Student {
+  id                        String    @id @default(uuid())
+  familyId                  String?   @map("family_id")
+  schoolLevelId             String?   @map("school_level_id")
+  enrollmentStatus          String?   @map("enrollment_status") @db.Text
+  firstName                 String?   @map("first_name") @db.Text
+  lastName1                 String?   @map("last_name_1") @db.Text
+  lastName2                 String?   @map("last_name_2") @db.Text
+  hebrewName                String?   @map("hebrew_name") @db.Text
+  nationality               String?   @db.Text
+  gender                    String?   @db.Text
+  idType                    String?   @map("id_type") @db.Text
+  idNumber                  String?   @map("id_number") @db.VarChar(100)
+  birthDate                 DateTime? @map("birth_date") @db.Date
+  bloodTypeId               String?   @map("blood_type_id")
+  weight                    Float?
+  address                   String?   @db.Text
+  phone                     String?   @db.Text
+  emergencyContact          String?   @map("emergency_contact") @db.Text
+  primaryDoctor             String?   @map("primary_doctor") @db.Text
+  foodAllergies             String?   @map("food_allergies") @db.Text
+  foodIntolerances          String?   @map("food_intolerances") @db.Text
+  gastrointestinalProblems  String?   @map("gastrointestinal_problems") @db.Text
+  diabetesHyperinsulinemia  Json?     @map("diabetes_hyperinsulinemia")
+  liverProblem              String?   @map("liver_problem") @db.Text
+  specialDiet               String?   @map("special_diet") @db.Text
+  dietComment               String?   @map("diet_comment") @db.Text
+  conditions                String?   @db.Text
+  medicationAllergies       String?   @map("medication_allergies") @db.Text
+  physicalLimitations       String?   @map("physical_limitations") @db.Text
+  canAttendPhysical         Boolean?  @map("can_attend_physical")
+  physicalObservations      String?   @map("physical_observations") @db.Text
+  canAttendTrips            Boolean?  @map("can_attend_trips")
+  tripObservations          String?   @map("trip_observations") @db.Text
+  canAttendExpeditions      Boolean?  @map("can_attend_expeditions")
+  expeditionObservations    String?   @map("expedition_observations") @db.Text
+  emergencyPriorityParents  Int?      @map("emergency_priority_parents")
+  emergencyPriorityEmergency Int?     @map("emergency_priority_emergency")
+  emergencyPriorityDoctor   Int?      @map("emergency_priority_doctor")
+  dayCare                   String?   @map("day_care") @db.Text
+  pendingPayment            Boolean?  @default(false) @map("pending_payment")
+  newStudent                Boolean?  @default(false) @map("new_student")
+  authorizesPhotos          Boolean?  @map("authorizes_photos")
+  authorizesTrips           Boolean?  @map("authorizes_trips")
+  authorizesPhotosMedia     Boolean?  @map("authorizes_photos_media")
+  inactive                  Boolean   @default(false)
+  demo                      Boolean   @default(false)
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+  
+  family                    Family?   @relation(fields: [familyId], references: [id])
+  schoolLevel               SchoolLevel? @relation(fields: [schoolLevelId], references: [id])
+  bloodType                 BloodType? @relation(fields: [bloodTypeId], references: [id])
+  guardians                 StudentGuardian[]
+  medications               StudentMedication[]
+  medicalHistory            StudentMedicalHistory[]
+  auditLogs                 StudentAuditLog[]
+  enrollments               Enrollment[]
+  automaticChargeStudents   AutomaticChargeStudent[]
+
+  @@index([familyId(length: 191)])
+  @@index([schoolLevelId(length: 191)])
+  @@index([bloodTypeId(length: 191)])
+  @@map("students")
+}
+
+// StudentGuardian (relación muchos-a-muchos entre Student y User)
+model StudentGuardian {
+  studentId String  @map("student_id")
+  userId    String  @map("user_id")
+  
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, userId])
+  @@index([studentId(length: 191)])
+  @@index([userId(length: 191)])
+  @@map("student_guardians")
+}
+
+// StudentMedication
+model StudentMedication {
+  id        String   @id @default(uuid())
+  studentId String   @map("student_id")
+  details   Json?    @map("medication_details")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId(length: 191)])
+  @@map("student_medications")
+}
+
+// StudentMedicalHistory
+model StudentMedicalHistory {
+  id        String   @id @default(uuid())
+  studentId String   @map("student_id")
+  details   Json?    @map("history_details")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId(length: 191)])
+  @@map("student_medical_history")
+}
+
+// StudentAuditLog (bitacora)
+model StudentAuditLog {
+  id        String   @id @default(uuid())
+  studentId String   @map("student_id")
+  userId    String?  @map("user_id")
+  timestamp DateTime @default(now())
+  action    String   @db.Text
+  userName  String?  @map("user_name") @db.Text
+  details   Json?    @map("log_details")
+  
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([studentId(length: 191)])
+  @@index([userId(length: 191)])
+  @@map("student_audit_logs")
+}
+
+// Enrollment (matricula y matriculaDayCare unificadas)
+enum EnrollmentType {
+  REGULAR
+  DAY_CARE
+}
+
+model Enrollment {
+  id                  String         @id @default(uuid())
+  studentId           String         @map("student_id")
+  userId              String         @map("user_id")
+  familyId            String?       @map("family_id")
+  schoolYear          Int            @map("school_year")
+  level               String?       @db.Text
+  type                EnrollmentType @default(REGULAR)
+  dayCareFrequency    String?       @map("day_care_frequency") @db.Text
+  studentName         String?       @map("student_name") @db.Text
+  guardianInitials   String?       @map("guardian_initials") @db.Text
+  authorizesPhotos    Boolean?      @map("authorizes_photos")
+  authorizesTrips     Boolean?      @map("authorizes_trips")
+  authorizesPhotosMedia Boolean?    @map("authorizes_photos_media")
+  contractAddress     String?       @map("contract_address") @db.Text
+  form                String?       @db.Text
+  enrollmentDate      DateTime?     @map("enrollment_date") @db.Date
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+  
+  student             Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family              Family?       @relation(fields: [familyId], references: [id], onDelete: SetNull)
+
+  @@index([studentId(length: 191)])
+  @@index([userId(length: 191)])
+  @@index([familyId(length: 191)])
+  @@map("enrollments")
+}
+
+// AutomaticCharge (cargoAutomatico)
+model AutomaticCharge {
+  id                  String    @id @default(uuid())
+  familyId            String    @map("family_id")
+  userId              String?   @map("user_id")
+  subscriberName      String?   @map("subscriber_name") @db.Text
+  subscriberIdNumber  String?   @map("subscriber_id_number") @db.VarChar(100)
+  cardNumber          String?   @map("card_number") @db.Text
+  expirationMonth     Int?      @map("expiration_month")
+  expirationYear      Int?      @map("expiration_year")
+  bankName            String?   @map("bank_name") @db.Text
+  cardName            String?   @map("card_name") @db.Text
+  cardType            String?   @map("card_type") @db.Text
+  cardholderSignature String?  @map("cardholder_signature") @db.Text
+  comments            String?   @db.Text
+  enabled             Boolean   @default(true)
+  form                String?   @db.Text
+  chargeDate          DateTime? @map("charge_date") @db.Date
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  
+  family              Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  students            AutomaticChargeStudent[]
+
+  @@index([familyId(length: 191)])
+  @@index([userId(length: 191)])
+  @@map("automatic_charges")
+}
+
+// AutomaticChargeStudent (relación muchos-a-muchos)
+model AutomaticChargeStudent {
+  chargeId  String          @map("charge_id")
+  studentId String          @map("student_id")
+  
+  charge    AutomaticCharge @relation(fields: [chargeId], references: [id], onDelete: Cascade)
+  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([chargeId, studentId])
+  @@index([chargeId(length: 191)])
+  @@index([studentId(length: 191)])
+  @@map("automatic_charge_students")
+}
+
+// Catalog Models (catalogo dividido en múltiples modelos)
+model SchoolLevel {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(255)
+  value       String?   @db.Text
+  order       Int?      @default(0)
+  enabled     Boolean   @default(true)
+  enrollmentFee Int?    @map("enrollment_fee")
+  monthlyFee  Int?      @map("monthly_fee")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  students    Student[]
+
+  @@unique([name(length: 191)])
+  @@map("school_levels")
+}
+
+model Nationality {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("nationalities")
+}
+
+model BloodType {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
+  students  Student[]
+
+  @@unique([name(length: 191)])
+  @@map("blood_types")
+}
+
+model IdType {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("id_types")
+}
+
+model PhoneType {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("phone_types")
+}
+
+model AddressType {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("address_types")
+}
+
+model CivilStatus {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("civil_statuses")
+}
+
+model GuardianRole {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("guardian_roles")
+}
+
+model Allergy {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("allergies")
+}
+
+model Intolerance {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("intolerances")
+}
+
+model GastrointestinalProblem {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("gastrointestinal_problems")
+}
+
+model MedicationType {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("medication_types")
+}
+
+model MedicalHistoryType {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("medical_history_types")
+}
+
+model Relationship {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name(length: 191)])
+  @@map("relationships")
+}
+
+// Role and Permission Models (acceso)
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  userRoles   UserRole[]
+  permissions RolePermission[]
+
+  @@unique([name(length: 191)])
+  @@map("roles")
+}
+
+model UserRole {
+  userId    String  @map("user_id")
+  roleId    String  @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([userId(length: 191)])
+  @@index([roleId(length: 191)])
+  @@map("user_roles")
+}
+
+model Permission {
+  id        String    @id @default(uuid())
+  option    String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
+  roles     RolePermission[]
+
+  @@unique([option(length: 191)])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String  @map("role_id")
+  permissionId String  @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([roleId(length: 191)])
+  @@index([permissionId(length: 191)])
+  @@map("role_permissions")
 }
